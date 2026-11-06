@@ -92,6 +92,29 @@
 
         .ticket-card { background: #f8fafc; padding: 20px; border-radius: 8px; border: 2px dashed #cbd5e1; margin: 20px 0; text-align: left; }
         .calc-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin: 15px 0; font-size: 0.85rem; }
+        /* Animasi Modern untuk Menu Login */
+.login-animated-card {
+  animation: fadeInUp 0.6s ease-in-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover Efek Ikon MoU */
+.btn-icon-action {
+  transition: all 0.2s ease-in-out;
+}
+.btn-icon-action:hover {
+  transform: scale(1.08);
+}
     </style>
 </head>
 <body>
@@ -139,22 +162,65 @@
 
     <!-- TAB 2: LACAK INDENT -->
     <section id="tab-track" class="container" style="display: none; padding: 50px 20px; max-width: 600px;">
-        <!-- SYSTEM LOGIN & DATABASE LOKAL -->
-<div id="login-section" class="card bg-dark text-white border-secondary p-3 mb-4">
-  <h5 class="fw-bold text-info"><i class="fa-solid fa-user-lock me-2"></i>Login Customer AutoIndent</h5>
-  <div class="row g-2 mt-1">
-    <div class="col-md-5">
-      <input type="text" id="username" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Username / Nama Customer">
-    </div>
-    <div class="col-md-5">
-      <input type="password" id="password" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Password (bebas)">
-    </div>
-    <div class="col-md-2">
-      <button class="btn btn-danger btn-sm w-100" onclick="simpanSessionLogin()">Login</button>
+      <!-- TAB LOGIN STANDALONE (Tepat Sebelum Lacak Indent) -->
+<section id="tab-login" class="container my-4" style="display: block;">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card bg-dark text-white border-secondary shadow-lg login-animated-card p-4 rounded-4">
+        <div class="text-center mb-4">
+          <div class="bg-danger d-inline-block p-3 rounded-circle mb-2">
+            <i class="fa-solid fa-user-shield fa-2x text-white"></i>
+          </div>
+          <h4 class="fw-bold">Selamat Datang!</h4>
+          <p class="text-secondary small">Silakan login untuk mengakses katalog & indent motor</p>
+        </div>
+        <form onsubmit="prosesLogin(event)">
+          <div class="mb-3">
+            <label class="form-label text-secondary small">Username / Email</label>
+            <input type="text" id="loginUser" class="form-control bg-dark text-white border-secondary" placeholder="Masukkan username" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-secondary small">Password</label>
+            <input type="password" id="loginPass" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-danger w-100 fw-bold py-2 shadow-sm">
+            <i class="fa-solid fa-right-to-bracket me-2"></i> Masuk ke Sistem
+          </button>
+        </form>
+      </div>
     </div>
   </div>
-  <small id="user-status" class="text-secondary mt-2"></small>
-</div>
+</section>
+
+<!-- TAB VERIFIKASI USIA & ATURAN KEBIJAKAN (Jika Menolak MoU) -->
+<section id="tab-verification" class="container my-4" style="display: none;">
+  <div class="card bg-dark text-white border-warning p-4 rounded-4 shadow">
+    <h4 class="text-warning fw-bold mb-3">
+      <i class="fa-solid fa-user-check me-2"></i>Verifikasi Syarat & Usia Konsumen
+    </h4>
+    <p class="text-secondary small">Karena Anda menolak/membutuhkan penyesuaian aturan kebijakan, silakan lakukan verifikasi data berikut sebelum melanjutkan pemesanan:</p>
+    
+    <div class="row g-3 mt-2">
+      <div class="col-md-6">
+        <label class="form-label text-white small">Konfirmasi Usia Anda</label>
+        <select id="verifUsia" class="form-select bg-dark text-white border-secondary">
+          <option value="">-- Pilih Usia --</option>
+          <option value="under17">Di bawah 17 Tahun</option>
+          <option value="over17">17 Tahun ke atas (Memiliki KTP)</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label text-white small">Nomor KTP / SIM</label>
+        <input type="number" id="verifKTP" class="form-control bg-dark text-white border-secondary" placeholder="3201xxxxxxxxxxxx">
+      </div>
+    </div>
+    
+    <div class="mt-4 d-flex justify-content-end gap-2">
+      <button class="btn btn-secondary btn-sm" onclick="switchTab('login')">Kembali ke Login</button>
+      <button class="btn btn-warning btn-sm fw-bold" onclick="simpanVerifikasi()">Simpan & Setujui Ulang</button>
+    </div>
+  </div>
+</section>
         <h2 style="text-align: center; margin-bottom: 10px;">Lacak Status Indent Motor</h2>
         <p style="text-align: center; color: var(--text-muted); margin-bottom: 25px;">Masukkan Kode Indent untuk melihat posisi pengiriman unit Anda.</p>
         
@@ -527,6 +593,68 @@ function tampilkanUserLogin() {
 window.onload = function() {
   tampilkanUserLogin();
 };
+// LOGIKA SISTEM INTEGRASI (Login, MoU, Verifikasi, & Navigasi)
+
+// 1. Fungsi Switch Tab / Section
+function switchTab(tabName) {
+  const sections = ['tab-login', 'tab-catalog', 'tab-track', 'tab-verification'];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (id === `tab-${tabName}`) ? 'block' : 'none';
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 2. Proses Login Standalone
+function prosesLogin(e) {
+  e.preventDefault();
+  const user = document.getElementById("loginUser").value.trim();
+  if (user) {
+    localStorage.setItem("user_indent_session", user);
+    alert(`Selamat Datang, ${user}! Anda berhasil login.`);
+    switchTab('catalog'); // Otomatis mengarahkan ke Katalog Motor
+  }
+}
+
+// 3. Aksi Ikon Centang (Setuju MoU -> Kembali ke Katalog/Struk)
+function setujuMoU() {
+  const modalEl = document.getElementById('modalMoU');
+  if (modalEl) {
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+  }
+  alert("Surat MoU Disetujui! Pemesanan Anda terkonfirmasi.");
+  switchTab('catalog');
+}
+
+// 4. Aksi Ikon Silang (Tolak MoU -> Ke Menu Verifikasi Usia)
+function tolakMoU() {
+  const modalEl = document.getElementById('modalMoU');
+  if (modalEl) {
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+  }
+  alert("Anda menolak kebijakan standar. Mengarahkan ke Menu Verifikasi Usia & Kebijakan...");
+  switchTab('verification');
+}
+
+// 5. Simpan Verifikasi Usia & KTP
+function simpanVerifikasi() {
+  const usia = document.getElementById('verifUsia').value;
+  const ktp = document.getElementById('verifKTP').value;
+
+  if (usia === 'under17') {
+    alert('Mohon maaf, pemesanan indent motor membutuhkan usia minimal 17 tahun atau pendampingan wali.');
+    return;
+  }
+  if (!ktp) {
+    alert('Harap masukkan nomor KTP/SIM untuk verifikasi.');
+    return;
+  }
+
+  alert('Verifikasi Usia & KTP Berhasil! Mengarahkan kembali ke Katalog Motor.');
+  switchTab('catalog');
+}
     </script>
     <!-- MODAL SURAT PERJANJIAN PEMBELIAN (MoU DEALER) -->
 <div class="modal fade" id="modalMoU" tabindex="-1" aria-hidden="true">
@@ -546,10 +674,16 @@ window.onload = function() {
         <h6 class="text-white fw-bold">PASAL 3: PEMBATALAN SEPIHAK</h6>
         <p>Pembatalan pemesanan setelah alokasi pabrik diterbitkan tunduk pada ketentuan pemotongan biaya administrasi sebesar 10% dari Booking Fee.</p>
       </div>
-      <div class="modal-footer border-secondary">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-        <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal"><i class="fa-solid fa-check me-1"></i> Saya Setuju & Memahami</button>
-      </div>
+      <div class="modal-footer border-secondary justify-content-between">
+  <!-- Ikon Silang (Tolak -> Ke Menu Verifikasi Usia) -->
+  <button type="button" class="btn btn-outline-danger btn-icon-action px-3" onclick="tolakMoU()">
+    <i class="fa-solid fa-xmark fa-lg me-1"></i> Tolak / Verifikasi Ulang
+  </button>
+  <!-- Ikon Centang (Setuju -> Selesai ke Katalog) -->
+  <button type="button" class="btn btn-success btn-icon-action px-4 fw-bold" onclick="setujuMoU()">
+    <i class="fa-solid fa-check fa-lg me-1"></i> Saya Setuju (Lanjut Katalog)
+  </button>
+</div>
     </div>
   </div>
 </div>
