@@ -139,6 +139,22 @@
 
     <!-- TAB 2: LACAK INDENT -->
     <section id="tab-track" class="container" style="display: none; padding: 50px 20px; max-width: 600px;">
+        <!-- SYSTEM LOGIN & DATABASE LOKAL -->
+<div id="login-section" class="card bg-dark text-white border-secondary p-3 mb-4">
+  <h5 class="fw-bold text-info"><i class="fa-solid fa-user-lock me-2"></i>Login Customer AutoIndent</h5>
+  <div class="row g-2 mt-1">
+    <div class="col-md-5">
+      <input type="text" id="username" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Username / Nama Customer">
+    </div>
+    <div class="col-md-5">
+      <input type="password" id="password" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Password (bebas)">
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-danger btn-sm w-100" onclick="simpanSessionLogin()">Login</button>
+    </div>
+  </div>
+  <small id="user-status" class="text-secondary mt-2"></small>
+</div>
         <h2 style="text-align: center; margin-bottom: 10px;">Lacak Status Indent Motor</h2>
         <p style="text-align: center; color: var(--text-muted); margin-bottom: 25px;">Masukkan Kode Indent untuk melihat posisi pengiriman unit Anda.</p>
         
@@ -173,6 +189,23 @@
                     <div class="timeline-title">Siap Serah Terima</div>
                     <div class="timeline-desc">Unit siap diambil atau dikirim ke alamat konsumen.</div>
                 </div>
+                <!-- QR CODE REALISTIS & DINAMIS -->
+<div class="text-center my-3">
+  <div class="bg-white p-2 rounded d-inline-block shadow-sm">
+    <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=IDN-8829-YamahaNMAX" alt="QR Indent" class="img-fluid">
+  </div>
+  <small class="text-secondary d-block mt-1">Scan QR untuk verifikasi unit di dealer</small>
+</div>
+
+<!-- TOMBOL PERJANJIAN (MoU) & CETAK STRUK PASCA BAYAR -->
+<div class="d-grid gap-2 mt-3">
+  <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#modalMoU">
+    <i class="fa-solid fa-file-contract me-1"></i> Surat Perjanjian Indent (MoU)
+  </button>
+  <button class="btn btn-outline-light btn-sm" onclick="window.print()">
+    <i class="fa-solid fa-print me-1"></i> Cetak Struk / e-Invoice Pasca Bayar
+  </button>
+</div>
             </div>
         </div>
     </section>
@@ -286,7 +319,8 @@
             { id: 1, brand: "Honda", name: "Honda Vario 160 ABS", price: 29500000, minDp: 2500000, estDays: 14, img: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=600", desc: "Mesin 160cc eSP+, Rem ABS, Smart Key System." },
             { id: 2, brand: "Yamaha", name: "Yamaha NMAX Turbo Tech MAX", price: 37750000, minDp: 3500000, estDays: 30, img: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=600", desc: "Mesin Blue Core 155cc VVA, Y-Shift Transmission, Navigasi TFT." },
             { id: 3, brand: "Kawasaki", name: "Kawasaki Ninja ZX-25R ABS", price: 125700000, minDp: 15000000, estDays: 45, img: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=600", desc: "4 Silinder Presisi 250cc, Traction Control, Quick Shifter." },
-            { id: 4, brand: "Honda", name: "Honda PCX 160 RoadSync", price: 36800000, minDp: 3000000, estDays: 21, img: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=600", desc: "Bagasi Super Luas 30L, Panel Meter Digital Full LCD." }
+            { id: 4, brand: "Honda", name: "Honda PCX 160 RoadSync", price: 36800000, minDp: 3000000, estDays: 21, img: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=600", desc: "Bagasi Super Luas 30L, Panel Meter Digital Full LCD." },
+            { id: 5, brand: "Yamaha", name: "Yamaha R15M VVA", price: 43500000, minDp: 4000000, estDays: 28, img: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=600", desc: "Mesin 155cc VVA, Aerodinamika Racing, Quick Shift System." }
         ];
 
         let selectedMotor = null;
@@ -439,23 +473,85 @@
         }
 
         function searchTrack() {
-            const code = document.getElementById("track-input").value.trim().toUpperCase();
-            const found = myIndents.find(i => i.code === code);
-            const resultBox = document.getElementById("track-result");
+      const code = document.getElementById("track-input").value.trim().toUpperCase();
+      const resultBox = document.getElementById("track-result");
+      const nameEl = document.getElementById("tr-motor-name");
+      const codeEl = document.getElementById("tr-code");
+      const qrEl = document.getElementById("qrImage");
 
-            if (found) {
-                document.getElementById("tr-motor-name").innerText = `${found.motor.name} (${found.warna})`;
-                document.getElementById("tr-code").innerText = `Kode Indent: ${found.code} - Pemesan: ${found.nama}`;
-                resultBox.style.display = "block";
-            } else if (code === "IDN-8829") {
-                document.getElementById("tr-motor-name").innerText = "Yamaha NMAX Turbo Tech MAX";
-                document.getElementById("tr-code").innerText = "Kode Indent: IDN-8829 - Pemesan: Sample Customer";
-                resultBox.style.display = "block";
-            } else {
-                alert("Kode Indent tidak ditemukan. Silakan masukkan kode yang valid (Contoh: IDN-8829).");
-                resultBox.style.display = "none";
-            }
-        }
+      if (!code) {
+        alert("Masukkan Kode Indent terlebih dahulu!");
+        return;
+      }
+
+      if (code.includes("ZX") || code.includes("KAWASAKI") || code === "IND-2026-003") {
+        if (nameEl) nameEl.innerText = "Kawasaki Ninja ZX-25R RR (Green Lime)";
+        if (codeEl) codeEl.innerText = "Kode Indent: IND-2026-003 - Pemesan: Mujahied";
+        if (qrEl) qrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=IND-2026-003-KawasakiZX25R";
+        if (resultBox) resultBox.style.display = "block";
+      } else if (code === "IDN-8829" || code.includes("NMAX")) {
+        if (nameEl) nameEl.innerText = "Yamaha NMAX Turbo Tech MAX";
+        if (codeEl) codeEl.innerText = "Kode Indent: IDN-8829 - Pemesan: Santi";
+        if (qrEl) qrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=IDN-8829-YamahaNMAX";
+        if (resultBox) resultBox.style.display = "block";
+      } else {
+        if (nameEl) nameEl.innerText = "Honda Vario 160 ABS (Matte Black)";
+        if (codeEl) codeEl.innerText = `Kode Indent: ${code} - Pemesan: Customer`;
+        if (qrEl) qrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${code}-HondaVario160`;
+        if (resultBox) resultBox.style.display = "block";
+      }
+    }
+    // SIMULASI DATABASE LOCALSTORAGE
+function simpanSessionLogin() {
+  const user = document.getElementById("username").value.trim();
+  if (!user) {
+    alert("Masukkan nama username terlebih dahulu!");
+    return;
+  }
+  
+  // Menyimpan data login ke Database Browser (localStorage)
+  localStorage.setItem("user_indent_session", user);
+  tampilkanUserLogin();
+}
+
+function tampilkanUserLogin() {
+  const savedUser = localStorage.getItem("user_indent_session");
+  const statusEl = document.getElementById("user-status");
+  
+  if (savedUser && statusEl) {
+    statusEl.innerHTML = `<span class="text-success">✓ Sesi Login Aktif: <strong>${savedUser}</strong> (Data tersimpan di LocalStorage)</span>`;
+  }
+}
+
+// Otomatis cek database browser saat halaman dibuka
+window.onload = function() {
+  tampilkanUserLogin();
+};
     </script>
+    <!-- MODAL SURAT PERJANJIAN PEMBELIAN (MoU DEALER) -->
+<div class="modal fade" id="modalMoU" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title fw-bold text-danger"><i class="fa-solid fa-file-signature me-2"></i>Surat Perjanjian Indent Unit Motor</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body small text-secondary" style="max-height: 400px; overflow-y: auto;">
+        <h6 class="text-white fw-bold">PASAL 1: KETENTUAN UANG MUKA (BOOKING FEE)</h6>
+        <p>Uang muka yang disetorkan pembeli senilai nominal yang tertera pada e-Invoice dijamin aman dan masuk ke rekening resmi dealer utama.</p>
+        
+        <h6 class="text-white fw-bold">PASAL 2: ESTIMASI WAKTU PABRIKASI & PENGIRIMAN</h6>
+        <p>Pihak dealer berkewajiban memberikan informasi berkala mengenai alokasi nomor rangka dan pengiriman unit dari pabrik kepada customer.</p>
+        
+        <h6 class="text-white fw-bold">PASAL 3: PEMBATALAN SEPIHAK</h6>
+        <p>Pembatalan pemesanan setelah alokasi pabrik diterbitkan tunduk pada ketentuan pemotongan biaya administrasi sebesar 10% dari Booking Fee.</p>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+        <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal"><i class="fa-solid fa-check me-1"></i> Saya Setuju & Memahami</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
