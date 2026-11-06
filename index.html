@@ -192,32 +192,34 @@
   </div>
 </section>
 
-<!-- TAB VERIFIKASI USIA & ATURAN KEBIJAKAN (Jika Menolak MoU) -->
+<!-- TAB VERIFIKASI KETENTUAN KEBIJAKAN (COSTUMER & AGENT/SALES) -->
 <section id="tab-verification" class="container my-4" style="display: none;">
   <div class="card bg-dark text-white border-warning p-4 rounded-4 shadow">
     <h4 class="text-warning fw-bold mb-3">
-      <i class="fa-solid fa-user-check me-2"></i>Verifikasi Syarat & Usia Konsumen
+      <i class="fa-solid fa-headset me-2"></i>Verifikasi Ketentuan Kebijakan Costumer & Agent/Sales
     </h4>
-    <p class="text-secondary small">Karena Anda menolak/membutuhkan penyesuaian aturan kebijakan, silakan lakukan verifikasi data berikut sebelum melanjutkan pemesanan:</p>
+    <p class="text-secondary small">
+      Karena Anda menolak/membutuhkan penyesuaian aturan kebijakan standar, silakan lakukan konfirmasi data di bawah ini untuk disambungkan dengan Agent/Sales resmi kami:
+    </p>
     
     <div class="row g-3 mt-2">
       <div class="col-md-6">
-        <label class="form-label text-white small">Konfirmasi Usia Anda</label>
+        <label class="form-label text-white small">Konfirmasi Usia / Status</label>
         <select id="verifUsia" class="form-select bg-dark text-white border-secondary">
           <option value="">-- Pilih Usia --</option>
-          <option value="under17">Di bawah 17 Tahun</option>
+          <option value="under17">Di bawah 17 Tahun (Butuh Pendampingan Sales)</option>
           <option value="over17">17 Tahun ke atas (Memiliki KTP)</option>
         </select>
       </div>
       <div class="col-md-6">
-        <label class="form-label text-white small">Nomor KTP / SIM</label>
-        <input type="number" id="verifKTP" class="form-control bg-dark text-white border-secondary" placeholder="3201xxxxxxxxxxxx">
+        <label class="form-label text-white small">Nomor KTP / Kontak Sales</label>
+        <input type="number" id="verifKTP" class="form-control bg-dark text-white border-secondary" placeholder="Masukkan No. KTP / Telepon">
       </div>
     </div>
     
     <div class="mt-4 d-flex justify-content-end gap-2">
       <button class="btn btn-secondary btn-sm" onclick="switchTab('login')">Kembali ke Login</button>
-      <button class="btn btn-warning btn-sm fw-bold" onclick="simpanVerifikasi()">Simpan & Setujui Ulang</button>
+      <button class="btn btn-warning btn-sm fw-bold" onclick="setujuMoU()">Setujui Kebijakan via Agent</button>
     </div>
   </div>
 </section>
@@ -605,55 +607,108 @@ function switchTab(tabName) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// 2. Proses Login Standalone
+// Variable Konteks MoU & Kode Indent
+let mouContext = 'login'; // Bisa 'login' atau 'checkout'
+let lastIndentCode = 'IDN-8829';
+
+// 1. Fungsi Navigasi Tab
+function switchTab(tabName) {
+  const sections = ['tab-login', 'tab-catalog', 'tab-track', 'tab-verification', 'tab-struk'];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (id === `tab-${tabName}`) ? 'block' : 'none';
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 2. Alur Login -> Buka MoU Momen Pertama
 function prosesLogin(e) {
   e.preventDefault();
   const user = document.getElementById("loginUser").value.trim();
-  if (user) {
-    localStorage.setItem("user_indent_session", user);
-    alert(`Selamat Datang, ${user}! Anda berhasil login.`);
-    switchTab('catalog'); // Otomatis mengarahkan ke Katalog Motor
+  if (!user) {
+    alert("Masukkan username terlebih dahulu!");
+    return;
+  }
+  localStorage.setItem("user_indent_session", user);
+  
+  // Set konteks ke Login dan buka Modal MoU
+  mouContext = 'login';
+  bukaModalMoU();
+}
+
+// 3. Alur Sebelum Bayar -> Buka MoU Momen Kedua
+function prosesCheckoutPemesanan() {
+  // Set konteks ke Checkout dan buka Modal MoU
+  mouContext = 'checkout';
+  bukaModalMoU();
+}
+
+// Fungsi Buka Modal MoU
+function bukaModalMoU() {
+  const modalEl = document.getElementById('modalMoU');
+  if (modalEl) {
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.show();
   }
 }
 
-// 3. Aksi Ikon Centang (Setuju MoU -> Kembali ke Katalog/Struk)
+// 4. Tombol Ikon Centang (Setuju MoU)
 function setujuMoU() {
   const modalEl = document.getElementById('modalMoU');
   if (modalEl) {
-    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-    modal.hide();
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
   }
-  alert("Surat MoU Disetujui! Pemesanan Anda terkonfirmasi.");
-  switchTab('catalog');
+
+  if (mouContext === 'login') {
+    alert("Aturan Kebijakan Disetujui! Selamat Datang di Katalog Motor.");
+    switchTab('catalog'); // Masuk ke Dashboard Utama Katalog
+  } else if (mouContext === 'checkout') {
+    selesaikanPemesananDanStruk(); // Terbitkan Struk Pemesanan
+  }
 }
 
-// 4. Aksi Ikon Silang (Tolak MoU -> Ke Menu Verifikasi Usia)
+// 5. Tombol Ikon Silang (Tolak MoU -> Ke Menu Verifikasi Agent/Sales)
 function tolakMoU() {
   const modalEl = document.getElementById('modalMoU');
   if (modalEl) {
-    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-    modal.hide();
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
   }
-  alert("Anda menolak kebijakan standar. Mengarahkan ke Menu Verifikasi Usia & Kebijakan...");
+
+  alert("Anda menolak persyaratan. Mengarahkan ke Menu Verifikasi Ketentuan Kebijakan Costumer dengan Agent/Sales...");
   switchTab('verification');
 }
 
-// 5. Simpan Verifikasi Usia & KTP
-function simpanVerifikasi() {
-  const usia = document.getElementById('verifUsia').value;
-  const ktp = document.getElementById('verifKTP').value;
+// 6. Penerbitan Struk Bukti Pemesanan & Kode Indent
+function selesaikanPemesananDanStruk() {
+  // Generate Kode Indent Otomatis
+  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  lastIndentCode = `IDN-${randomNum}`;
+  
+  // Simpan Kode ke LocalStorage
+  localStorage.setItem("active_indent_code", lastIndentCode);
 
-  if (usia === 'under17') {
-    alert('Mohon maaf, pemesanan indent motor membutuhkan usia minimal 17 tahun atau pendampingan wali.');
-    return;
-  }
-  if (!ktp) {
-    alert('Harap masukkan nomor KTP/SIM untuk verifikasi.');
-    return;
+  // Update Tampilan Kode di Struk (jika ada elemen id 'struk-code-display')
+  const strukCodeEl = document.getElementById("struk-code-display");
+  if (strukCodeEl) {
+    strukCodeEl.innerText = lastIndentCode;
   }
 
-  alert('Verifikasi Usia & KTP Berhasil! Mengarahkan kembali ke Katalog Motor.');
-  switchTab('catalog');
+  alert(`Pemesanan Berhasil!\nStruk Bukti diterbitkan dengan Kode Indent: ${lastIndentCode}`);
+  switchTab('struk'); // Pindah ke Dashboard/Menu Struk Hasil Total
+}
+
+// 7. Fungsi Lacak dari Struk (Menggunakan Kode Bukti Pemesanan)
+function lacakDariStruk() {
+  const trackInput = document.getElementById("track-input");
+  if (trackInput) {
+    trackInput.value = lastIndentCode;
+  }
+  switchTab('track');
+  if (typeof searchTrack === 'function') {
+    searchTrack();
+  }
 }
     </script>
     <!-- MODAL SURAT PERJANJIAN PEMBELIAN (MoU DEALER) -->
