@@ -1,15 +1,23 @@
 {
-  "name": "Sistem Indent Motor",
-  "short_name": "IndentMotor",
-  "start_url": "./index.html",
+  "name": "Sistem Informasi Indent Motor Online",
+  "short_name": "Indent Motor",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#0d6efd",
   "theme_color": "#0d6efd",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3082/3082383.png",
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
